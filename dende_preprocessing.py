@@ -64,22 +64,22 @@ class Preprocessing:
         dataset_limpo = {coluna: [] for coluna in colunas}
         
         for i in range(num_linhas):
-            # O pulo do gato: empacotamos a linha inteira em uma tupla.
+            # empacotamos a linha inteira em uma tupla.
             # Como tuplas são imutáveis, o Python consegue checar se ela já existe no 'set' de forma super rápida.
             linha_atual = tuple(self.dataset[col][i] for col in colunas)
             
             if linha_atual not in linhas_vistas:
                 linhas_vistas.add(linha_atual) # Registra a linha como "já vista"
                 
-                # Como a linha é inédita, salvamos cada pedacinho dela nas colunas do novo dataset
+                # Como a linha é inédita, salvamos cada pedaço dela nas colunas do novo dataset
                 for col in colunas:
                     dataset_limpo[col].append(self.dataset[col][i])
                     
         linhas_removidas = num_linhas - len(linhas_vistas)
         print(f"[Drop Duplicates]: {linhas_removidas} linhas duplicadas foram para o lixo.")
         
-        # O toque final: atualizamos o dataset das outras classes também. 
-        # Assim garantimos que as análises futuras serão feitas com os dados limpinhos.
+        # atualizamos o dataset das outras classes também. 
+        # assim garantimos que as análises futuras serão feitas com os dados limpos.
         self.dataset = dataset_limpo
         self.statistics.dataset = self.dataset
         self.missing_values.dataset = self.dataset
