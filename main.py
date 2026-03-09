@@ -59,9 +59,15 @@ def main():
     if dataset_spotify:
         try:        
             prep = Preprocessing(dataset_spotify)
-            print("Infraestrutura pronta! Orquestrador instanciado com sucesso.")
-        except Exception as e:
-            print(f"Erro inesperado na orquestração: {e}")
             
+            # Inicia a limpeza passando a vassoura nas linhas idênticas
+            print("\n[Etapa 1]: Removendo duplicatas...")
+            prep.drop_duplicates()
+            
+            print("\nPipeline Base executado com sucesso!")
+        except Exception as e:
+            print(f"Erro na execução: {e}")
+
+
 if __name__ == "__main__":
     main()
