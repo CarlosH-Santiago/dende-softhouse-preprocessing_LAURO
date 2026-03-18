@@ -21,38 +21,33 @@ class Statistics:
         self.dataset = dataset
 
     def mean(self, column):
-        """
-        Calcula a média aritmética de uma coluna.
+        """Calcula a média aritmética de uma coluna."""
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
+        if not self._is_numeric(column):
+            raise ValueError(f"A coluna '{column}' não é numérica.")
 
-        Retorno
-        -------
-        float
-            A média dos valores na coluna.
-        """
-        pass
+        lista = self.dataset[column]
+        if not lista:
+            return 0.0
+
+        return sum(lista) / len(lista)
 
     def median(self, column):
-        """
-        Calcula a mediana de uma coluna.
+        """Calcula a mediana de uma coluna."""
 
-        A mediana é o valor central de um conjunto de dados ordenado.
+        data = self._sort_values(self.dataset[column], column)
+        n = len(data)
+        if n == 0:
+            return 0.0
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
-
-        Retorno
-        -------
-        float
-            O valor da mediana da coluna.
-        """
-        pass
+        mid = n // 2
+        if n % 2 == 0:
+            if self._is_numeric(column):
+                return (data[mid - 1] + data[mid]) / 2.0
+            # Para dados não numéricos, a convenção é pegar o elemento inferior.
+            return data[mid - 1]
+        else:
+            return data[mid]
 
     def mode(self, column):
         """
