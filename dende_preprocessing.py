@@ -1,5 +1,6 @@
 from dende_statistics import Statistics
 from typing import Dict, List, Set, Any
+import math
 
 class MissingValueProcessor:
     """
@@ -24,7 +25,15 @@ class MissingValueProcessor:
         Returns:
             Dict[str, List[Any]]: Um dicionário representando as linhas com valores nulos.
         """
-        pass
+        target_cols = self._get_target_columns(columns)
+        n_rows = len(next(iter(self.dataset.values()))) if self.dataset else 0
+        
+        result = {col: [] for col in self.dataset}
+        for i in range(n_rows):
+            if any(self.dataset[col][i] is None for col in target_cols):
+                for col in self.dataset:
+                    result[col].append(self.dataset[col][i])
+        return result
 
     def notna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
@@ -38,7 +47,15 @@ class MissingValueProcessor:
         Returns:
             Dict[str, List[Any]]: Um dicionário representando as linhas sem valores nulos.
         """
-        pass
+        target_cols = self._get_target_columns(columns)
+        n_rows = len(next(iter(self.dataset.values()))) if self.dataset else 0
+        
+        result = {col: [] for col in self.dataset}
+        for i in range(n_rows):
+            if all(self.dataset[col][i] is not None for col in target_cols):
+                for col in self.dataset:
+                    result[col].append(self.dataset[col][i])
+        return result
 
     def fillna(self, columns: Set[str] = None, value: Any = 0) -> Dict[str, List[Any]]:
         """
@@ -53,7 +70,13 @@ class MissingValueProcessor:
         Returns:
             Preprocessing: A própria instância (self) para permitir encadeamento.
         """
-        pass
+        target_cols = self._get_target_columns(columns)
+        for col in target_cols:
+            self.dataset[col] = [
+                value if v is None else v 
+                for v in self.dataset[col]
+            ]
+        return self.dataset
 
     def dropna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
@@ -63,7 +86,18 @@ class MissingValueProcessor:
         Args:
             columns (Set[str]): Colunas a serem verificadas para valores nulos. Se vazio, todas as colunas são verificadas.
         """
-        pass
+        target_cols = self._get_target_columns(columns)
+        n_rows = len(next(iter(self.dataset.values()))) if self.dataset else 0
+        
+        indices_to_keep = []
+        for i in range(n_rows):
+            if all(self.dataset[col][i] is not None for col in target_cols):
+                indices_to_keep.append(i)
+        
+        for col in self.dataset:
+            self.dataset[col] = [self.dataset[col][i] for i in indices_to_keep]
+            
+        return self.dataset
 
 
 class Scaler:
@@ -84,7 +118,27 @@ class Scaler:
         Args:
             columns (Set[str]): Colunas para aplicar o scaler. Se vazio, tenta aplicar a todas.
         """
-        pass
+        target_cols = self._get_target_columns(columns)
+        
+        for col in target_cols:
+            valid_values = [v for v in self.dataset[col] if v is not None]
+            if not valid_values:
+                continue
+                
+            v_min, v_max = min(valid_values), max(valid_values)
+            
+            if v_max == v_min:
+                self.dataset[col] = [
+                    0.0 if v is not None else None 
+                    for v in self.dataset[col]
+                ]
+            else:
+                self.dataset[col] = [
+                    (v - v_min) / (v_max - v_min) if v is not None else None
+                    for v in self.dataset[col]
+                ]
+                
+        return self.dataset
 
     def standard_scaler(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
@@ -94,7 +148,30 @@ class Scaler:
         Args:
             columns (Set[str]): Colunas para aplicar o scaler. Se vazio, tenta aplicar a todas.
         """
-        pass
+        target_cols = self._get_target_columns(columns)
+        
+        for col in target_cols:
+            valid_values = [v for v in self.dataset[col] if v is not None]
+            n = len(valid_values)
+            if n == 0:
+                continue
+                
+            mean = sum(valid_values) / n
+            variance = sum((v - mean) ** 2 for v in valid_values) / n
+            std_dev = math.sqrt(variance)
+            
+            if std_dev == 0:
+                self.dataset[col] = [
+                    0.0 if v is not None else None 
+                    for v in self.dataset[col]
+                ]
+            else:
+                self.dataset[col] = [
+                    (v - mean) / std_dev if v is not None else None
+                    for v in self.dataset[col]
+                ]
+                
+        return self.dataset
 
 class Encoder:
     """
@@ -111,7 +188,20 @@ class Encoder:
         Args:
             columns (Set[str]): Colunas categóricas para codificar.
         """
-        pass
+        target_cols = list(columns) if columns else list(self.dataset.keys())
+        
+        for col in target_cols:
+            unique_vals = list(set(v for v in self.dataset[col] if v is not None))
+            unique_vals.sort(key=str)
+            
+            mapping = {val: idx for idx, val in enumerate(unique_vals)}
+            
+            self.dataset[col] = [
+                mapping[v] if v is not None else None
+                for v in self.dataset[col]
+            ]
+            
+        return self.dataset
 
     def oneHot_encode(self, columns: Set[str]) -> Dict[str, List[Any]]:
         """
@@ -121,7 +211,26 @@ class Encoder:
         Args:
             columns (Set[str]): Colunas categóricas para codificar.
         """
-        pass
+        target_cols = list(columns) if columns else []
+        n_rows = len(next(iter(self.dataset.values()))) if self.dataset else 0
+        
+        for col in target_cols:
+            if col not in self.dataset:
+                continue
+                
+            unique_vals = list(set(v for v in self.dataset[col] if v is not None))
+            unique_vals.sort(key=str)
+            
+            for val in unique_vals:
+                new_col_name = f"{col}_{val}"
+                self.dataset[new_col_name] = [
+                    1 if self.dataset[col][i] == val else 0
+                    for i in range(n_rows)
+                ]
+                
+            del self.dataset[col]
+            
+        return self.dataset
 
 
 class Preprocessing:
@@ -144,7 +253,12 @@ class Preprocessing:
         Valida se todas as listas (colunas) no dicionário do dataset
         têm o mesmo comprimento.
         """
-        pass
+        if not self.dataset:
+            return
+            
+        lengths = {len(col_data) for col_data in self.dataset.values()}
+        if len(lengths) > 1:
+            raise ValueError("O dataset possui colunas de tamanhos diferentes.")
 
     def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
