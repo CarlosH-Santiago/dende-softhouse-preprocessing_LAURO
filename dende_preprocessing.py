@@ -12,59 +12,67 @@ class MissingValueProcessor:
         """Retorna as colunas a serem processadas. Se 'columns' for vazio, retorna todas as colunas."""
         return list(columns) if columns else list(self.dataset.keys())
 
+    def _get_num_rows(self) -> int:
+        # da mesma forma como vamos saber quantas colunas tem, é improtante saber quantas linhas também tem
+        if not self.dataset:
+            return 0
+        # Pega a primeira coluna do dicionário e verifica o tamanho da lista dela
+        primeira_coluna = next(iter(self.dataset.values()))
+        return len(primeira_coluna)
+
     def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
-        """
-        Retorna um novo dataset contendo apenas as linhas que possuem
-        pelo menos um valor nulo (None) em uma das colunas especificadas.
+        # 1. Definir quais colunas vamos olhar
+        target_cols = self._get_target_columns(columns)
+        num_rows = self._get_num_rows()
 
-        Args:
-            columns (Set[str]): Um conjunto de nomes de colunas a serem verificadas.
-                            Se vazio, todas as colunas são consideradas.
+        novo_dataset = {col: [] for col in self.dataset}
 
-        Returns:
-            Dict[str, List[Any]]: Um dicionário representando as linhas com valores nulos.
-        """
-        pass
+        for i in range(num_rows):
+            # vai verificar se tem pelo menos um none
+            tem_nulo = any(self.dataset[col][i] is None for col in target_cols)
+
+            # se achou um nulo vai copiar a coluna e mandar para o novo dataset
+            if tem_nulo:
+                for col in self.dataset:
+                    novo_dataset[col].append(self.dataset[col][i])
+
+        return novo_dataset
 
     def notna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
-        """
-        Retorna um novo dataset contendo apenas as linhas que não possuem
-        valores nulos (None) em nenhuma das colunas especificadas.
+        target_cols = self._get_target_columns(columns)
+        num_rows = self._get_num_rows()
 
-        Args:
-            columns (Set[str]): Um conjunto de nomes de colunas a serem verificadas.
-                               Se vazio, todas as colunas são consideradas.
+        novo_dataset = {col: [] for col in self.dataset}
 
-        Returns:
-            Dict[str, List[Any]]: Um dicionário representando as linhas sem valores nulos.
-        """
-        pass
+        for i in range(num_rows):
+            tem_nulo = any(self.dataset[col][i] is None for col in target_cols)
+
+            # mesma coisa da função anterior porém se não tem nulo, manda para a nova tabela
+            if not tem_nulo:
+                for col in self.dataset:
+                    novo_dataset[col].append(self.dataset[col][i])
+
+        return novo_dataset
 
     def fillna(self, columns: Set[str] = None, value: Any = 0) -> Dict[str, List[Any]]:
-        """
-        Preenche valores nulos (None) nas colunas especificadas com um valor fixo.
-        Modifica o dataset da classe.
+        target_cols = self._get_target_columns(columns)
 
-        Args:
-            columns (Set[str]): Colunas onde o preenchimento será aplicado. 
-                               Se vazio, aplica a todas as colunas do dataset.
-            value (Any): Valor a ser inserido no lugar de None.
+        # Iteramos apenas pelas colunas que queremos modificar
+        for col in target_cols:
+            for i in range(len(self.dataset[col])):
+                if self.dataset[col][i] is None:
+                    self.dataset[col][i] = value
 
-        Returns:
-            Preprocessing: A própria instância (self) para permitir encadeamento.
-        """
-        pass
+        # vai retornar o dataset modificado
+        return self.dataset
 
     def dropna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
-        """
-        Remove as linhas que contêm valores nulos (None) nas colunas especificadas.
-        Modifica o dataset da classe.
+        dataset_limpo = self.notna(columns)
 
-        Args:
-            columns (Set[str]): Colunas a serem verificadas para valores nulos. Se vazio, todas as colunas são verificadas.
-        """
-        pass
+        for col in self.dataset:
+            self.dataset[col] = dataset_limpo[col]
 
+        return self.dataset
 
 class Scaler:
     """
