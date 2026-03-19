@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 import copy
 
-from dende_preprocessing import Preprocessing  # ajuste conforme necessário
+from dende_preprocessing import Preprocessing  # Ajustado para o nome correto do arquivo
 
 
 class TestPreprocessingWith10x5Dataset(unittest.TestCase):
@@ -157,7 +157,7 @@ class TestPreprocessingWith10x5Dataset(unittest.TestCase):
 
 class TestWithMockedStatistics(unittest.TestCase):
 
-    @patch("dende_preprocessing.Statistics")
+    @patch("dende_preprocessing.Statistics") # Ajustado o nome do arquivo aqui também
     def test_preprocessing_with_mocked_statistics(self, mock_stats):
         dataset = {
             "a": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
