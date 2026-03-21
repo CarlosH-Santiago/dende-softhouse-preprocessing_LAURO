@@ -53,6 +53,41 @@ class Preprocessing:
         if lengths and len(set(lengths)) > 1: 
             raise ValueError("Todas as colunas devem possuir o mesmo tamanho.")
 
+    def drop_duplicates(self) -> Dict[str, List[Any]]:
+        """Varre o dicionário e apaga as linhas que são cópias exatas umas das outras."""
+        colunas = list(self.dataset.keys())
+        if not colunas:
+            return self.dataset
+            
+        num_linhas = len(self.dataset[colunas[0]])
+        linhas_vistas = set() 
+        dataset_limpo = {coluna: [] for coluna in colunas}
+        
+        for i in range(num_linhas):
+            # empacotamos a linha inteira em uma tupla.
+            # Como tuplas são imutáveis, o Python consegue checar se ela já existe no 'set' de forma super rápida.
+            linha_atual = tuple(self.dataset[col][i] for col in colunas)
+            
+            if linha_atual not in linhas_vistas:
+                linhas_vistas.add(linha_atual) # Registra a linha como "já vista"
+                
+                # Como a linha é inédita, salvamos cada pedaço dela nas colunas do novo dataset
+                for col in colunas:
+                    dataset_limpo[col].append(self.dataset[col][i])
+                    
+        linhas_removidas = num_linhas - len(linhas_vistas)
+        print(f"[Drop Duplicates]: {linhas_removidas} linhas duplicadas foram para o lixo.")
+        
+        # atualizamos o dataset das outras classes também. 
+        # assim garantimos que as análises futuras serão feitas com os dados limpos.
+        self.dataset = dataset_limpo
+        self.statistics.dataset = self.dataset
+        self.missing_values.dataset = self.dataset
+        self.scaler.dataset = self.dataset
+        self.encoder.dataset = self.dataset
+        
+        return self.dataset
+
     # Atalhos práticos: em vez de chamar prep.missing_values.isna(), chamamos direto prep.isna()
     def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]: return self.missing_values.isna(columns)
     def notna(self, columns: Set[str] = None) -> Dict[str, List[Any]]: return self.missing_values.notna(columns)
