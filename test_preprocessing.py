@@ -92,13 +92,15 @@ class TestPreprocessingWith10x5Dataset(unittest.TestCase):
 
     def test_minmax_scaler(self):
         prep = Preprocessing(copy.deepcopy(self.dataset))
-        prep.fillna(value=0)
+        # Removemos o prep.fillna() daqui. A classe deve saber lidar com os None.
 
         result = prep.scale(columns={"age", "salary", "score"}, method="minMax")
 
         for col in ["age", "salary", "score"]:
-            self.assertEqual(min(result[col]), 0)
-            self.assertEqual(max(result[col]), 1)
+            # Filtramos os Nones apenas para fazer a verificação assertiva
+            valores_validos = [v for v in result[col] if v is not None]
+            self.assertEqual(min(valores_validos), 0)
+            self.assertEqual(max(valores_validos), 1)
 
     # ==========================================
     # TESTE STANDARD SCALER
@@ -106,13 +108,14 @@ class TestPreprocessingWith10x5Dataset(unittest.TestCase):
 
     def test_standard_scaler(self):
         prep = Preprocessing(copy.deepcopy(self.dataset))
-        prep.fillna(value=0)
+        # Removemos o prep.fillna() daqui. 
 
         result = prep.scale(columns={"age"}, method="standard")
 
-        mean = sum(result["age"]) / len(result["age"])
+        valores_validos = [v for v in result["age"] if v is not None]
+        mean = sum(valores_validos) / len(valores_validos)
         self.assertAlmostEqual(mean, 0, places=6)
-
+        
     # ==========================================
     # TESTE LABEL ENCODER
     # ==========================================
