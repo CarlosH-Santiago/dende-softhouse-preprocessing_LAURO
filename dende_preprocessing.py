@@ -9,10 +9,67 @@ class MissingValueProcessor:
     def _get_target_columns(self, columns: Set[str]) -> List[str]:
         return list(columns) if columns else list(self.dataset.keys())
 
-    def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]: pass
-    def notna(self, columns: Set[str] = None) -> Dict[str, List[Any]]: pass
-    def fillna(self, columns: Set[str] = None, value: Any = 0) -> Dict[str, List[Any]]: pass
-    def dropna(self, columns: Set[str] = None) -> Dict[str, List[Any]]: pass
+    def _get_num_rows(self) -> int:
+        # da mesma forma como vamos saber quantas colunas tem, é improtante saber quantas linhas também tem
+        if not self.dataset:
+            return 0
+        # Pega a primeira coluna do dicionário e verifica o tamanho da lista dela
+        primeira_coluna = next(iter(self.dataset.values()))
+        return len(primeira_coluna)
+
+    def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
+        # 1. Definir quais colunas vamos olhar
+        target_cols = self._get_target_columns(columns)
+        num_rows = self._get_num_rows()
+
+        novo_dataset = {col: [] for col in self.dataset}
+
+        for i in range(num_rows):
+            # vai verificar se tem pelo menos um none
+            tem_nulo = any(self.dataset[col][i] is None for col in target_cols)
+
+            # se achou um nulo vai copiar a coluna e mandar para o novo dataset
+            if tem_nulo:
+                for col in self.dataset:
+                    novo_dataset[col].append(self.dataset[col][i])
+
+        return novo_dataset
+
+    def notna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
+        target_cols = self._get_target_columns(columns)
+        num_rows = self._get_num_rows()
+
+        novo_dataset = {col: [] for col in self.dataset}
+
+        for i in range(num_rows):
+            tem_nulo = any(self.dataset[col][i] is None for col in target_cols)
+
+            # mesma coisa da função anterior porém se não tem nulo, manda para a nova tabela
+            if not tem_nulo:
+                for col in self.dataset:
+                    novo_dataset[col].append(self.dataset[col][i])
+
+        return novo_dataset
+
+    def fillna(self, columns: Set[str] = None, value: Any = 0) -> Dict[str, List[Any]]:
+        target_cols = self._get_target_columns(columns)
+
+        # Iteramos apenas pelas colunas que queremos modificar
+        for col in target_cols:
+            for i in range(len(self.dataset[col])):
+                if self.dataset[col][i] is None:
+                    self.dataset[col][i] = value
+
+        # vai retornar o dataset modificado
+        return self.dataset
+
+    def dropna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
+        dataset_limpo = self.notna(columns)
+
+        for col in self.dataset:
+            self.dataset[col] = dataset_limpo[col]
+
+        return self.dataset
 
 class Scaler:
     # Classe que ajusta as escalas matemáticas (como normalizar notas de 0 a 1)
