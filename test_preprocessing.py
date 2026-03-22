@@ -30,6 +30,29 @@ class TestPreprocessingWith10x5Dataset(unittest.TestCase):
             Preprocessing(invalid_dataset)
 
     # ==========================================
+    # TESTE DE REMOÇÃO DE DUPLICATAS
+    # ==========================================
+    def test_drop_duplicates(self):
+        # Criamos um cenário falso onde as duas últimas linhas são cópias descaradas da primeira
+        dataset_com_duplicatas = {
+            "id": [1, 2, 3, 1, 1],
+            "nome": ["Caos", "Joao", "Hudnei", "Caos", "Caos"],
+            "setor": ["TI", "RH", "TI", "TI", "TI"]
+        }
+        
+        prep = Preprocessing(copy.deepcopy(dataset_com_duplicatas))
+        result = prep.drop_duplicates()
+
+        # O teste só passa se o algoritmo conseguir reduzir as 5 linhas originais para apenas 3 únicas
+        for col in result:
+            self.assertEqual(len(result[col]), 3)
+            
+        # Confere se os dados certos sobreviveram à limpeza
+        self.assertEqual(result["id"], [1, 2, 3])
+        self.assertEqual(result["nome"], ["Caos", "Joao", "Hudnei"])
+
+    
+    # ==========================================
     # TESTE ISNA
     # ==========================================
 
