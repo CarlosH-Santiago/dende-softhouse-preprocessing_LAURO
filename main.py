@@ -1,8 +1,36 @@
+import csv
+from dende_preprocessing import Preprocessing
+
+def carregar_csv(caminho):
+    dataset = {}
+    try:
+        with open(caminho, mode='r', encoding='utf-8') as arquivo:
+            leitor = csv.DictReader(arquivo)
+            if not leitor.fieldnames: return {}
+            
+            for coluna in leitor.fieldnames:
+                dataset[coluna] = []
+                
+            for linha in leitor:
+                for coluna in leitor.fieldnames:
+                    valor = linha[coluna]
+                    if valor == "" or valor is None: valor = None
+                    else:
+                        try:
+                            val_float = float(valor)
+                            valor = int(val_float) if val_float.is_integer() else val_float
+                        except ValueError: pass
+                    dataset[coluna].append(valor)
+        return dataset
+    except Exception as e:
+        print(f"Erro ao carregar o arquivo CSV: {e}")
+        return None
+
 def main():
-    caminho = 'spotify_data clean.csv' # Atenção ao nome exato do arquivo
+    caminho = 'spotify_data clean.csv'
     
     print("--- INICIANDO PIPELINE DE PRÉ-PROCESSAMENTO ---\n")
-    dataset_spotify = carregar_dados_spotify(caminho)
+    dataset_spotify = carregar_csv(caminho)
     
     if dataset_spotify:
         try:        
