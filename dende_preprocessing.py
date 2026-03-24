@@ -3,7 +3,6 @@ from typing import Dict, List, Set, Any
 import math
 
 class MissingValueProcessor:
-    """Task do João Guilherme: Processa valores ausentes (None)"""
     def __init__(self, dataset: Dict[str, List[Any]]):
         self.dataset = dataset
 
@@ -52,7 +51,7 @@ class MissingValueProcessor:
 
 
 class Scaler:
-    """Task do Hudnei: Transformadores de Escala Matemáticos"""
+
     def __init__(self, dataset: Dict[str, List[Any]]):
         self.dataset = dataset
 
@@ -97,7 +96,7 @@ class Scaler:
 
 
 class Encoder:
-    """Task do Gustavo: Tradutor de Textos para Números"""
+    
     def __init__(self, dataset: Dict[str, List[Any]]):
         self.dataset = dataset
 
@@ -125,7 +124,7 @@ class Encoder:
 
 
 class Preprocessing:
-    """Task do Arquiteto (Caos): O Orquestrador (Padrão Facade)"""
+
     def __init__(self, dataset: Dict[str, List[Any]]):
         self.dataset = dataset
         self._validate_dataset_shape()
